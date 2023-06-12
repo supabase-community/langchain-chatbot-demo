@@ -1,12 +1,10 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { PineconeClient } from "@pinecone-database/pinecone";
 import * as Ably from "ably";
 import { CallbackManager } from "langchain/callbacks";
 import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models";
-import { OpenAIEmbeddings } from "langchain/embeddings";
 import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
+import { createClient } from "@supabase/supabase-js";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { uuid } from "uuidv4";
 import { summarizeLongDocument } from "./summarizer";
@@ -16,17 +14,15 @@ import { Metadata, getMatchesFromEmbeddings } from "./matches";
 import { templates } from "./templates";
 
 const llm = new OpenAI({});
-let pinecone: PineconeClient | null = null;
-
-const initPineconeClient = async () => {
-  pinecone = new PineconeClient();
-  await pinecone.init({
-    environment: process.env.PINECONE_ENVIRONMENT!,
-    apiKey: process.env.PINECONE_API_KEY!,
-  });
-};
 
 const ably = new Ably.Realtime({ key: process.env.ABLY_API_KEY });
+
+const supabasePrivateKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabasePrivateKey)
+  throw new Error(`Expected env var SUPABASE_SERVICE_ROLE_KEY`);
+
+const supabaseUrl = process.env.SUPABASE_URL;
+if (!supabaseUrl) throw new Error(`Expected env var SUPABASE_URL`);
 
 const handleRequest = async ({
   prompt,
@@ -35,10 +31,6 @@ const handleRequest = async ({
   prompt: string;
   userId: string;
 }) => {
-  if (!pinecone) {
-    await initPineconeClient();
-  }
-
   let summarizedCount = 0;
 
   try {
@@ -64,18 +56,9 @@ const handleRequest = async ({
       userPrompt: prompt,
       conversationHistory,
     });
-    const inquiry = inquiryChainResult.text;
+    const inquiry: string = inquiryChainResult.text;
 
     console.log(inquiry);
-
-    console.log(inquiry);
-
-    // Embed the user's intent and query the Pinecone index
-    const embedder = new OpenAIEmbeddings({
-      modelName: "text-embedding-ada-002",
-    });
-
-    const embeddings = await embedder.embedQuery(inquiry);
     channel.publish({
       data: {
         event: "status",
@@ -83,7 +66,10 @@ const handleRequest = async ({
       },
     });
 
-    const matches = await getMatchesFromEmbeddings(embeddings, pinecone!, 2);
+    const client = createClient(supabaseUrl!, supabasePrivateKey!, {
+      auth: { persistSession: false },
+    });
+    const matches = await getMatchesFromEmbeddings(inquiry, client!, 2);
 
     const urls =
       matches &&
