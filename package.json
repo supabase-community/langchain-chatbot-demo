@@ -17,6 +17,7 @@
     "@google-cloud/bigquery": "^6.1.0",
     "@next/font": "13.1.6",
     "@pinecone-database/pinecone": "^0.1.5",
+    "@supabase/supabase-js": "^2.24.0",
     "ably": "^1.2.5-beta.1",
     "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",
