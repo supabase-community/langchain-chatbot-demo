@@ -8,6 +8,10 @@ create table documents (
   metadata jsonb, -- corresponds to Document.metadata
   embedding vector(1536) -- 1536 works for OpenAI embeddings, change if needed
 );
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/auth/row-level-security for more details.
+alter table documents
+  enable row level security;
 
 -- Create a function to search for documents
 create function match_documents (

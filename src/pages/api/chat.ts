@@ -4,10 +4,10 @@ import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models";
 import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
-import { createClient } from "@supabase/supabase-js";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { uuid } from "uuidv4";
 import { summarizeLongDocument } from "./summarizer";
+import { supabaseClient } from "utils/supabase";
 
 import { ConversationLog } from "./conversationLog";
 import { Metadata, getMatchesFromEmbeddings } from "./matches";
@@ -16,13 +16,6 @@ import { templates } from "./templates";
 const llm = new OpenAI({});
 
 const ably = new Ably.Realtime({ key: process.env.ABLY_API_KEY });
-
-const supabasePrivateKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!supabasePrivateKey)
-  throw new Error(`Expected env var SUPABASE_SERVICE_ROLE_KEY`);
-
-const supabaseUrl = process.env.SUPABASE_URL;
-if (!supabaseUrl) throw new Error(`Expected env var SUPABASE_URL`);
 
 const handleRequest = async ({
   prompt,
@@ -58,7 +51,7 @@ const handleRequest = async ({
     });
     const inquiry: string = inquiryChainResult.text;
 
-    console.log(inquiry);
+    // console.log(inquiry);
     channel.publish({
       data: {
         event: "status",
@@ -66,10 +59,7 @@ const handleRequest = async ({
       },
     });
 
-    const client = createClient(supabaseUrl!, supabasePrivateKey!, {
-      auth: { persistSession: false },
-    });
-    const matches = await getMatchesFromEmbeddings(inquiry, client!, 2);
+    const matches = await getMatchesFromEmbeddings(inquiry, supabaseClient, 2);
 
     const urls =
       matches &&

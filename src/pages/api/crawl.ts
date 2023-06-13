@@ -1,18 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { Crawler, Page } from "../../crawler";
+import { Crawler, Page } from "crawler";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseClient } from "utils/supabase";
 import { TokenTextSplitter } from "langchain/text_splitter";
 import { summarizeLongDocument } from "./summarizer";
-
-const supabasePrivateKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!supabasePrivateKey)
-  throw new Error(`Expected env var SUPABASE_SERVICE_ROLE_KEY`);
-
-const supabaseUrl = process.env.SUPABASE_URL;
-if (!supabaseUrl) throw new Error(`Expected env var SUPABASE_URL`);
 
 // The TextEncoder instance enc is created and its encode() method is called on the input string.
 // The resulting Uint8Array is then sliced, and the TextDecoder instance decodes the sliced array in a single line of code.
@@ -61,14 +54,10 @@ export default async function handler(
   );
 
   try {
-    const client = createClient(supabaseUrl!, supabasePrivateKey!, {
-      auth: { persistSession: false },
-    });
-
     const embeddings = new OpenAIEmbeddings();
 
     const store = new SupabaseVectorStore(embeddings, {
-      client,
+      client: supabaseClient,
       tableName: "documents",
     });
 

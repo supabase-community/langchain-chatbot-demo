@@ -1,8 +1,4 @@
-type ConversationLogEntry = {
-  entry: string;
-  created_at: Date;
-  speaker: string;
-};
+import { supabaseClient } from "utils/supabase";
 
 class ConversationLog {
   constructor(public userId: string) {
@@ -14,15 +10,13 @@ class ConversationLog {
     speaker,
   }: {
     entry: string;
-    speaker: string;
+    speaker: "user" | "ai";
   }) {
     try {
-      console.log(
-        `INSERT INTO conversations (user_id, entry, speaker) VALUES (?, ?, ?) ON CONFLICT (created_at) DO NOTHING`,
-        {
-          replacements: [this.userId, entry, speaker],
-        }
-      );
+      await supabaseClient
+        .from("conversations")
+        .insert({ user_id: this.userId, entry, speaker })
+        .throwOnError();
     } catch (e) {
       console.log(`Error adding entry: ${e}`);
     }
@@ -33,21 +27,31 @@ class ConversationLog {
   }: {
     limit: number;
   }): Promise<string[]> {
-    console.log(
-      `SELECT entry, speaker, created_at FROM conversations WHERE user_id = '${this.userId}' ORDER By created_at DESC LIMIT ${limit}`
-    );
-    // const history = conversation[0] as ConversationLogEntry[];
+    const { data: history } = await supabaseClient
+      .from("conversations")
+      .select("entry, speaker, created_at")
+      .eq("user_id", this.userId)
+      .order("created_at", { ascending: false })
+      .limit(limit)
+      .throwOnError();
 
-    // return history
-    //   .map((entry) => {
-    //     return `${entry.speaker.toUpperCase()}: ${entry.entry}`;
-    //   })
-    //   .reverse();
-    return [];
+    const response = history
+      ? history
+          .map((entry) => {
+            return `${entry.speaker.toUpperCase()}: ${entry.entry}`;
+          })
+          .reverse()
+      : [];
+    console.log(response);
+    return response;
   }
 
   public async clearConversation() {
-    console.log(`DELETE FROM conversations WHERE user_id = '${this.userId}'`);
+    await supabaseClient
+      .from("conversations")
+      .delete()
+      .eq("user_id", this.userId)
+      .throwOnError();
   }
 }
 
