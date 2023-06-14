@@ -3,7 +3,7 @@ import { Crawler, Page } from "crawler";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { supabaseClient } from "utils/supabase";
+import { supabaseAdminClient } from "utils/supabaseAdmin";
 import { TokenTextSplitter } from "langchain/text_splitter";
 import { summarizeLongDocument } from "./summarizer";
 
@@ -57,7 +57,7 @@ export default async function handler(
     const embeddings = new OpenAIEmbeddings();
 
     const store = new SupabaseVectorStore(embeddings, {
-      client: supabaseClient,
+      client: supabaseAdminClient,
       tableName: "documents",
     });
 

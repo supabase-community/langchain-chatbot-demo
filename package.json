@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ably-labs/react-hooks": "^2.1.0",
     "@chatscope/chat-ui-kit-react": "^1.10.1",
     "@dqbd/tiktoken": "^0.4.0",
     "@fingerprintjs/fingerprintjs": "^3.4.0",
@@ -18,7 +17,6 @@
     "@next/font": "13.1.6",
     "@pinecone-database/pinecone": "^0.1.5",
     "@supabase/supabase-js": "^2.24.0",
-    "ably": "^1.2.5-beta.1",
     "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",
     "eventsource": "^2.0.2",

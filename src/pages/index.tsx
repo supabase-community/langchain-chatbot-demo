@@ -14,10 +14,9 @@ import {
   ConversationHeader,
   TypingIndicator,
 } from "@chatscope/chat-ui-kit-react";
+import { supabaseBrowserClient } from "utils/supabaseBrowser";
 
 import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import { useChannel } from "@ably-labs/react-hooks";
-import { Types } from "ably";
 
 type ConversationEntry = {
   message: string;
@@ -32,16 +31,14 @@ type request = {
 
 const updateChatbotMessage = (
   conversation: ConversationEntry[],
-  message: Types.Message
+  message: { interactionId: string; token: string; event: "response" }
 ): ConversationEntry[] => {
-  const interactionId = message.data.interactionId;
+  const interactionId = message.interactionId;
 
   const updatedConversation = conversation.reduce(
     (acc: ConversationEntry[], e: ConversationEntry) => [
       ...acc,
-      e.id === interactionId
-        ? { ...e, message: e.message + message.data.token }
-        : e,
+      e.id === interactionId ? { ...e, message: e.message + message.token } : e,
     ],
     []
   );
@@ -52,7 +49,7 @@ const updateChatbotMessage = (
         ...updatedConversation,
         {
           id: interactionId,
-          message: message.data.token,
+          message: message.token,
           speaker: "bot",
           date: new Date(),
         },
@@ -71,24 +68,27 @@ export default function Home() {
     { immediate: true }
   );
 
-  console.log("visitorData?.visitorId!", visitorData?.visitorId!);
-
   const userId = "roie";
 
-  useChannel(userId, (message) => {
-    switch (message.data.event) {
-      case "response":
-        setConversation((state) => updateChatbotMessage(state, message));
-        break;
-      case "status":
-        setStatusMessage(message.data.message);
-        break;
-      case "responseEnd":
-      default:
-        setBotIsTyping(false);
-        setStatusMessage("Waiting for query...");
-    }
-  });
+  const channel = supabaseBrowserClient.channel(userId);
+
+  channel
+    .on("broadcast", { event: "chat" }, ({ payload }) => {
+      console.log(payload);
+      switch (payload.event) {
+        case "response":
+          setConversation((state) => updateChatbotMessage(state, payload));
+          break;
+        case "status":
+          setStatusMessage(payload.message);
+          break;
+        case "responseEnd":
+        default:
+          setBotIsTyping(false);
+          setStatusMessage("Waiting for query...");
+      }
+    })
+    .subscribe();
 
   const submit = async () => {
     setConversation((state) => [

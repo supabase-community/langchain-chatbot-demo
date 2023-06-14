@@ -1,4 +1,4 @@
-import { supabaseClient } from "utils/supabase";
+import { supabaseAdminClient } from "utils/supabaseAdmin";
 
 class ConversationLog {
   constructor(public userId: string) {
@@ -13,7 +13,7 @@ class ConversationLog {
     speaker: "user" | "ai";
   }) {
     try {
-      await supabaseClient
+      await supabaseAdminClient
         .from("conversations")
         .insert({ user_id: this.userId, entry, speaker })
         .throwOnError();
@@ -27,7 +27,7 @@ class ConversationLog {
   }: {
     limit: number;
   }): Promise<string[]> {
-    const { data: history } = await supabaseClient
+    const { data: history } = await supabaseAdminClient
       .from("conversations")
       .select("entry, speaker, created_at")
       .eq("user_id", this.userId)
@@ -47,7 +47,7 @@ class ConversationLog {
   }
 
   public async clearConversation() {
-    await supabaseClient
+    await supabaseAdminClient
       .from("conversations")
       .delete()
       .eq("user_id", this.userId)
