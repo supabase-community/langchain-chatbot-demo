@@ -15,7 +15,7 @@ const supabaseBrowserClient = createClient<Database>(
   {
     realtime: {
       params: {
-        eventsPerSecond: 50,
+        eventsPerSecond: 100,
       },
     },
   }

@@ -50,7 +50,7 @@ const handleRequest = async ({
 
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
-        channel.send({
+        await channel.send({
           type: "broadcast",
           event: "chat",
           payload: {
@@ -102,41 +102,30 @@ const handleRequest = async ({
           ],
         });
 
+        let i = 0;
         const chat = new ChatOpenAI({
           streaming: true,
           verbose: true,
           modelName: "gpt-3.5-turbo",
           callbackManager: CallbackManager.fromHandlers({
             async handleLLMNewToken(token) {
-              // TODO figure out realtime broadcast rate limiting
-              // channel.send({
-              //   type: "broadcast",
-              //   event: "chat",
-              //   payload: {
-              //     event: "response",
-              //     token: token,
-              //     interactionId,
-              //   },
-              // });
+              await channel.send({
+                type: "broadcast",
+                event: "chat",
+                payload: {
+                  event: "response",
+                  token,
+                  interactionId,
+                },
+              });
             },
             async handleLLMEnd(result) {
-              console.log("LLMresult", result.generations[0][0].text);
               // Store answer in DB
               await conversationLog.addEntry({
                 entry: result.generations[0][0].text,
                 speaker: "ai",
               });
-              // Broadcast to client
-              channel.send({
-                type: "broadcast",
-                event: "chat",
-                payload: {
-                  event: "response",
-                  token: result.generations[0][0].text,
-                  interactionId,
-                },
-              });
-              channel.send({
+              await channel.send({
                 type: "broadcast",
                 event: "chat",
                 payload: {
@@ -156,7 +145,7 @@ const handleRequest = async ({
 
         const allDocs = docs.join("\n");
         if (allDocs.length > 4000) {
-          channel.send({
+          await channel.send({
             type: "broadcast",
             event: "chat",
             payload: {

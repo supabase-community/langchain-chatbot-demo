@@ -29,7 +29,6 @@ export default async function handler(
 
   const documentCollection = await Promise.all(
     pages.map(async (row) => {
-      console.log(row.text);
       const splitter = new TokenTextSplitter({
         encodingName: "gpt2",
         chunkSize: 300,

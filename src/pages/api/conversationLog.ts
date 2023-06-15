@@ -42,7 +42,6 @@ class ConversationLog {
           })
           .reverse()
       : [];
-    console.log(response);
     return response;
   }
 
