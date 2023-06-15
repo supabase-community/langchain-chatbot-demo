@@ -12,19 +12,22 @@ export interface Database {
       conversations: {
         Row: {
           created_at: string
-          entry: string
+          entry: string | null
+          id: string
           speaker: Database["public"]["Enums"]["speaker"]
           user_id: string
         }
         Insert: {
           created_at?: string
-          entry: string
+          entry?: string | null
+          id?: string
           speaker: Database["public"]["Enums"]["speaker"]
           user_id: string
         }
         Update: {
           created_at?: string
-          entry?: string
+          entry?: string | null
+          id?: string
           speaker?: Database["public"]["Enums"]["speaker"]
           user_id?: string
         }

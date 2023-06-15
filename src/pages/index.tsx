@@ -1,6 +1,5 @@
 import Head from "next/head";
 import { useState } from "react";
-import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -23,10 +22,6 @@ type ConversationEntry = {
   speaker: "bot" | "user";
   date: Date;
   id?: string;
-};
-
-type request = {
-  prompt: string;
 };
 
 const updateChatbotMessage = (
@@ -58,15 +53,9 @@ const updateChatbotMessage = (
 
 export default function Home() {
   const [text, setText] = useState("");
-  const [extendedResult, updateExtendedResult] = useState(false);
   const [conversation, setConversation] = useState<ConversationEntry[]>([]);
   const [botIsTyping, setBotIsTyping] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Waiting for query...");
-
-  const { isLoading, data: visitorData } = useVisitorData(
-    { extendedResult },
-    { immediate: true }
-  );
 
   const userId = "roie";
 
@@ -180,7 +169,6 @@ export default function Home() {
                 }}
                 sendButton={true}
                 autoFocus
-                disabled={isLoading}
               />
             </ChatContainer>
           </MainContainer>

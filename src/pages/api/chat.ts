@@ -4,7 +4,6 @@ import { ChatOpenAI } from "langchain/chat_models";
 import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { uuid } from "uuidv4";
 import { summarizeLongDocument } from "./summarizer";
 import { supabaseAdminClient } from "utils/supabaseAdmin";
 
@@ -25,7 +24,13 @@ const handleRequest = async ({
 
   try {
     const channel = supabaseAdminClient.channel(userId);
-    const interactionId = uuid();
+    const { data } = await supabaseAdminClient
+      .from("conversations")
+      .insert({ speaker: "ai", user_id: userId })
+      .select()
+      .single()
+      .throwOnError();
+    const interactionId = data?.id;
 
     // Retrieve the conversation log and save the user's prompt
     const conversationLog = new ConversationLog(userId);
@@ -121,10 +126,10 @@ const handleRequest = async ({
             },
             async handleLLMEnd(result) {
               // Store answer in DB
-              await conversationLog.addEntry({
-                entry: result.generations[0][0].text,
-                speaker: "ai",
-              });
+              await supabaseAdminClient
+                .from("conversations")
+                .update({ entry: result.generations[0][0].text })
+                .eq("id", interactionId);
               await channel.send({
                 type: "broadcast",
                 event: "chat",
