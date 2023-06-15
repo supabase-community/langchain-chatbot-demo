@@ -1,5 +1,7 @@
+"use client";
+
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -14,6 +16,11 @@ import {
   TypingIndicator,
 } from "@chatscope/chat-ui-kit-react";
 import { supabaseBrowserClient } from "utils/supabaseBrowser";
+import { Auth } from "@supabase/auth-ui-react";
+import {
+  // Import predefined theme
+  ThemeSupa,
+} from "@supabase/auth-ui-shared";
 
 import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 
@@ -56,8 +63,21 @@ export default function Home() {
   const [conversation, setConversation] = useState<ConversationEntry[]>([]);
   const [botIsTyping, setBotIsTyping] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Waiting for query...");
+  const [userId, setUserId] = useState<string | undefined>();
 
-  const userId = "roie";
+  useEffect(() => {
+    supabaseBrowserClient.auth
+      .getSession()
+      .then(({ data: { session } }) => setUserId(session?.user?.id));
+  }, []);
+
+  if (!userId)
+    return (
+      <Auth
+        supabaseClient={supabaseBrowserClient}
+        appearance={{ theme: ThemeSupa }}
+      />
+    );
 
   const channel = supabaseBrowserClient.channel(userId);
 
@@ -94,7 +114,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt: text, userId }),
+        body: JSON.stringify({ prompt: text }),
       });
 
       await response.json();

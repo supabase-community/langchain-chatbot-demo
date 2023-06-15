@@ -11,6 +11,9 @@
   "dependencies": {
     "@chatscope/chat-ui-kit-react": "^1.10.1",
     "@next/font": "13.1.6",
+    "@supabase/auth-helpers-nextjs": "^0.7.2",
+    "@supabase/auth-ui-react": "^0.4.2",
+    "@supabase/auth-ui-shared": "^0.1.6",
     "@supabase/supabase-js": "^2.24.0",
     "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",

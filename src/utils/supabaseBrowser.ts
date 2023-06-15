@@ -1,24 +1,14 @@
-"use client";
-import { createClient } from "@supabase/supabase-js";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "types/supabase";
 
-const supabasePublicKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-if (!supabasePublicKey)
-  throw new Error(`Expected env var NEXT_PUBLIC_SUPABASE_ANON_KEY`);
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-if (!supabaseUrl) throw new Error(`Expected env var NEXT_PUBLIC_SUPABASE_URL`);
-
-const supabaseBrowserClient = createClient<Database>(
-  supabaseUrl,
-  supabasePublicKey,
-  {
+const supabaseBrowserClient = createClientComponentClient<Database>({
+  options: {
     realtime: {
       params: {
-        eventsPerSecond: 100,
+        eventsPerSecond: 1000,
       },
     },
-  }
-);
+  },
+});
 
 export { supabaseBrowserClient };
