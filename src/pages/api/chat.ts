@@ -193,7 +193,7 @@ export default async function handler(
       options: {
         realtime: {
           params: {
-            eventsPerSecond: 1000,
+            eventsPerSecond: -1,
           },
         },
       },

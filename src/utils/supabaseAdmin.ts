@@ -15,7 +15,7 @@ const supabaseAdminClient = createClient<Database>(
     auth: { persistSession: false },
     realtime: {
       params: {
-        eventsPerSecond: 1000,
+        eventsPerSecond: -1,
       },
     },
   }
