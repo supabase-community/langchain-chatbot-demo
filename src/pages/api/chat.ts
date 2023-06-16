@@ -5,7 +5,10 @@ import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { summarizeLongDocument } from "./summarizer";
-import { supabaseAdminClient } from "utils/supabaseAdmin";
+import {
+  createPagesServerClient,
+  SupabaseClient,
+} from "@supabase/auth-helpers-nextjs";
 
 import { ConversationLog } from "./conversationLog";
 import { Metadata, getMatchesFromEmbeddings } from "./matches";
@@ -16,15 +19,15 @@ const llm = new OpenAI({});
 const handleRequest = async ({
   prompt,
   userId,
+  supabaseAuthedClient,
 }: {
   prompt: string;
   userId: string;
+  supabaseAuthedClient: SupabaseClient;
 }) => {
-  let summarizedCount = 0;
-
   try {
-    const channel = supabaseAdminClient.channel(userId);
-    const { data } = await supabaseAdminClient
+    const channel = supabaseAuthedClient.channel(userId);
+    const { data } = await supabaseAuthedClient
       .from("conversations")
       .insert({ speaker: "ai", user_id: userId })
       .select()
@@ -66,7 +69,7 @@ const handleRequest = async ({
 
         const matches = await getMatchesFromEmbeddings(
           inquiry,
-          supabaseAdminClient,
+          supabaseAuthedClient,
           2
         );
 
@@ -126,7 +129,7 @@ const handleRequest = async ({
             },
             async handleLLMEnd(result) {
               // Store answer in DB
-              await supabaseAdminClient
+              await supabaseAuthedClient
                 .from("conversations")
                 .update({ entry: result.generations[0][0].text })
                 .eq("id", interactionId);
@@ -183,8 +186,38 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Create authenticated Supabase Client
+  const supabase = createPagesServerClient(
+    { req, res },
+    {
+      options: {
+        realtime: {
+          params: {
+            eventsPerSecond: -1,
+          },
+        },
+      },
+    }
+  );
+  // Check if we have a session
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session)
+    return res.status(401).json({
+      error: "not_authenticated",
+      description:
+        "The user does not have an active session or is not authenticated",
+    });
+
+  // Run queries with RLS on the server
   const { body } = req;
-  const { prompt, userId } = body;
-  await handleRequest({ prompt, userId });
+  const { prompt } = body;
+  await handleRequest({
+    prompt,
+    userId: session.user.id,
+    supabaseAuthedClient: supabase,
+  });
   res.status(200).json({ message: "started" });
 }
