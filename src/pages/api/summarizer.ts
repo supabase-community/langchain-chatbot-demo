@@ -1,6 +1,7 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { templates } from "./templates";
-import { LLMChain, PromptTemplate } from "langchain";
+import { LLMChain } from "langchain/chains";
+import { PromptTemplate } from "langchain/prompts";
 import Bottleneck from "bottleneck";
 import { StructuredOutputParser } from "langchain/output_parsers";
 

@@ -66,9 +66,15 @@ export default function Home() {
   const [userId, setUserId] = useState<string | undefined>();
 
   useEffect(() => {
-    supabaseBrowserClient.auth
-      .getSession()
-      .then(({ data: { session } }) => setUserId(session?.user?.id));
+    supabaseBrowserClient.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        supabaseBrowserClient.auth.onAuthStateChange((_e, newSession) =>
+          setUserId(newSession?.user.id)
+        );
+      } else {
+        setUserId(session?.user.id);
+      }
+    });
   }, []);
 
   if (!userId)
