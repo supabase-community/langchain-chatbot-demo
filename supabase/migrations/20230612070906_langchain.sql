@@ -16,7 +16,7 @@ alter table documents
 CREATE POLICY "Allow langchain querying for authenticated users" ON "public"."documents"
 AS PERMISSIVE FOR SELECT
 TO authenticated
-USING (true)
+USING (true);
 
 -- Create a function to search for documents
 create function match_documents (
