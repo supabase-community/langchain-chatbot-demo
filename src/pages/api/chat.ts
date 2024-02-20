@@ -1,7 +1,7 @@
 import { CallbackManager } from "langchain/callbacks";
 import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { summarizeLongDocument } from "./summarizer";
@@ -179,6 +179,8 @@ const handleRequest = async ({
   } catch (error) {
     //@ts-ignore
     console.error(error);
+    // @ts-ignore
+    console.error("Something went wrong with OpenAI: ", error.message);
   }
 };
 

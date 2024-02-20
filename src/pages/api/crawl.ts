@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Crawler, Page } from "crawler";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { supabaseAdminClient } from "utils/supabaseAdmin";
 import { TokenTextSplitter } from "langchain/text_splitter";
 import { summarizeLongDocument } from "./summarizer";
@@ -29,6 +29,7 @@ export default async function handler(
 
   const documentCollection = await Promise.all(
     pages.map(async (row) => {
+      // console.log(row);
       const splitter = new TokenTextSplitter({
         encodingName: "gpt2",
         chunkSize: 300,
@@ -59,14 +60,15 @@ export default async function handler(
       client: supabaseAdminClient,
       tableName: "documents",
     });
-
+    console.log("Storing embeddings now ");
     try {
       await Promise.all(
         documentCollection.map(async (documents) => {
+          console.log(documents);
           await store.addDocuments(documents);
         })
       );
-
+      console.log("Process has completed");
       res.status(200).json({ message: "Done" });
     } catch (e) {
       console.log(e);
